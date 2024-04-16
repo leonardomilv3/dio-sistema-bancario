@@ -1,5 +1,5 @@
 def deposito():
-    global saldo
+    global saldo, extratos
 
     print("\n--- Funcionalidade de Depósito ---\n")
 
@@ -15,7 +15,19 @@ def deposito():
 
 
 def saque():
-    pass
+    global saldo, extratos
+
+    print("\n--- Funcionalidade de Saque ---\n")
+
+    saque = float(input("Informe um valor positivo a ser sacado: "))
+
+    if saque > 0 and saque <= LIMITE_SAQUE and saldo >= saque :
+        saldo -= saque
+        saque_str = '{:.2f}'.format(saque) 
+        extratos.append(f"- Saque de R$ {saque_str}\n")
+        print("Saque realizado com sucesso!\n")
+    else:
+        print("Erro! Não foi possível realizar o saque.\n")
 
 
 def extrato():
@@ -48,7 +60,11 @@ while(True):
     if ( opcao == 1):
         deposito()
     elif ( opcao == 2 ):  
-        saque()
+        if contador_saque > 3:
+            print("O limite diária de {LIMITE_DIARIO} saques foi atingido!")
+        else:
+            contador_saque +=1
+            saque()
     elif ( opcao == 3 ):
         print(extrato())
     elif ( opcao == 4 ):
