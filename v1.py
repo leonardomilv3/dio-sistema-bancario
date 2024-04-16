@@ -13,7 +13,6 @@ def deposito():
     else:
         print("Erro! Não foi possível realizar o depósito.\n")
 
-
 def saque():
     global saldo, extratos
 
@@ -30,8 +29,28 @@ def saque():
         print("Erro! Não foi possível realizar o saque.\n")
 
 
-def extrato():
-    pass
+def extrato() -> str:
+    global saldo, extratos
+
+    print("\n--- Funcionalidade de Extrato ---\n")
+    
+    saldo_str = '{:.2f}'.format(saldo)
+
+    resposta = ""
+
+    if len(extratos) == 0:
+        resposta += "Não foram realizadas movimentações.\n"
+        resposta += f"Saldo atual: R$ {saldo_str}\n"
+        return resposta
+    
+    resposta += f"Saldo atual: R$ {saldo_str}\n"
+
+    resposta += "Extrato:\n"
+    for acao in extratos[::-1]:
+        resposta += acao
+
+    return resposta
+
 
 
 menu = """
@@ -71,6 +90,4 @@ while(True):
         break
     else:
         print("Opção inválida")
-
-        
 
