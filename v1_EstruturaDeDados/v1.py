@@ -52,18 +52,20 @@ def extrato() -> str:
     return resposta
 
 
+def menu():
+    menu = """
 
-menu = """
+    --- Sistema Bancário ---
 
---- Sistema Bancário ---
+    Operações disponíveis:
+    - 1: operação de depósito
+    - 2: operação de saque
+    - 3: operação de extrato
+    - 4: sair do sistema
 
-Operações disponíveis:
-- 1: operação de depósito
-- 2: operação de saque
-- 3: operação de extrato
-- 4: sair do sistema
+    Digite apenas o número da operação desejada: """
 
-Digite apenas o número da operação desejada: """
+    print(menu(), end='')
 
 LIMITE_DIARIO = 3
 LIMITE_SAQUE = float(500)
@@ -73,7 +75,8 @@ contador_saque = 0
 extratos = []
 
 while(True):
-    print(menu, end='')
+    
+    menu()
     opcao = int(input())
 
     if ( opcao == 1):
