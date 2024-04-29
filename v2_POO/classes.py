@@ -1,5 +1,126 @@
-from Cliente import Cliente
-from Transacao import *
+from abc import *
+from datetime import datetime
+
+
+class Transacao(ABC):
+
+    @property
+    def valor(self):
+        pass
+    
+    @abstractmethod
+    def registrar(conta):
+        pass
+
+
+class Deposito(Transacao):
+    _valor : float
+
+    def __init__(self, valor) -> None:
+        self._valor = valor
+
+    @property
+    def valor(self):
+        return self._valor
+    
+    def __str__(self) -> str:
+        return "Depósito"
+
+    def registrar(self, conta):
+        sucesso_deposito = conta.depositar(self.valor)
+
+        if sucesso_deposito:
+            conta.historico.adicionar_transacao(self)
+
+
+class Saque(Transacao):
+    _valor : float
+
+    def __init__(self, valor) -> None:
+        self._valor = valor
+
+    @property
+    def valor(self) -> float:
+        return self._valor
+    
+    def __str__(self) -> str:
+        return "Saque"
+
+    def registrar(self, conta):
+        sucesso_saque = conta.sacar(self.valor)
+
+        if sucesso_saque:
+            conta.historico.adicionar_transacao(self)
+    
+
+
+
+class Historico():
+    
+    _transacoes : list
+
+    def __init__(self):
+        self._transacoes = []
+
+    @property
+    def transacoes(self):
+        return self._transacoes 
+    
+
+    def adicionar_transacao(self, transacao: Transacao):
+        self._transacoes.append(
+            {
+                "tipo": transacao.__class__.__name__,
+                "valor": transacao.valor,
+                "data": datetime.now().strftime("%d-%m-%Y %H:%M:%s")
+            }
+        )
+
+
+class Cliente():
+
+    _endereco: str
+    _contas: list
+
+    def __init__(self, endereco):
+        self._endereco = endereco
+        self._contas = []
+
+    @property
+    def endereco(self):
+        return self._endereco
+    
+    @property
+    def contas(self):
+        return self._contas
+
+    def adicionar_conta(self, conta):
+        self._contas.append(conta)
+
+    def realizar_transacao(self, conta, transacao: Transacao):
+        transacao.registrar(conta)
+
+
+class PessoaFisica(Cliente):
+    
+    _cpf: str
+    _nome: str
+    _data_nascimento: datetime.date
+
+    def __init__(self, cpf, nome, dt, endereco):
+        super().__init__(endereco)
+        self._cpf = cpf
+        self._nome = nome
+        self._data_nascimento = dt
+    
+    @property
+    def cpf(self):
+        return self._cpf
+    
+    @property
+    def nome(self):
+        return self._nome
+
 
 class Conta():
 
@@ -17,7 +138,7 @@ class Conta():
         self._historico = Historico()
         
     @classmethod
-    def nova_conta(cls, cliente: Cliente, numero: int) -> Conta:
+    def nova_conta(cls, cliente: Cliente, numero: int):
         return cls(numero, cliente)
 
     @property
@@ -47,7 +168,7 @@ class Conta():
         excedeu_saldo = valor > saldo
 
         if excedeu_saldo:
-            print(f"Operação falhou! O valor: {valor} excedeu o saldo: {saldo}.\n")
+            print(f"Operação falhou! O valor: {valor:.2f} excedeu o saldo: {saldo:.2f}.\n")
         elif valor > 0:
             self._saldo -= valor
             print("Saque realizado com sucesso!\n")
@@ -60,9 +181,7 @@ class Conta():
     def depositar(self, valor: float) -> bool:
         
         if valor > 0:
-            self._saldo += valor 
-            transacao = Deposito(valor)
-            self._historico.adicionar_transacao(transacao) 
+            self._saldo += valor
             print("Depósito realizado com sucesso!")
             return True
         else:
@@ -111,7 +230,3 @@ class ContaCorrente(Conta):
             C/C:\t\t{self.numero}
             Titular:\t{self.cliente.nome}
         """
-
-
-
-

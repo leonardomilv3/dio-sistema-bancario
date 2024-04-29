@@ -1,96 +1,160 @@
-def deposito():
-    global saldo, extratos
-
-    print("\n--- Funcionalidade de Depósito ---\n")
-
-    deposito = float(input("Informe um valor positivo a ser depositado: "))
-    
-    if deposito > 0:
-        saldo += deposito
-        deposito_str = '{:.2f}'.format(deposito) 
-        extratos.append(f"- Depósito de R$ {deposito_str}\n")
-        print("Depósito realizado com sucesso!")
-    else:
-        print("Erro! Não foi possível realizar o depósito.\n")
-
-def saque():
-    global saldo, extratos
-
-    print("\n--- Funcionalidade de Saque ---\n")
-
-    saque = float(input("Informe um valor positivo a ser sacado: "))
-
-    if saque > 0 and saque <= LIMITE_SAQUE and saldo >= saque :
-        saldo -= saque
-        saque_str = '{:.2f}'.format(saque) 
-        extratos.append(f"- Saque de R$ {saque_str}\n")
-        print("Saque realizado com sucesso!\n")
-    else:
-        print("Erro! Não foi possível realizar o saque.\n")
-
-
-def extrato() -> str:
-    global saldo, extratos
-
-    print("\n--- Funcionalidade de Extrato ---\n")
-    
-    saldo_str = '{:.2f}'.format(saldo)
-
-    resposta = ""
-
-    if len(extratos) == 0:
-        resposta += "Não foram realizadas movimentações.\n"
-        resposta += f"Saldo atual: R$ {saldo_str}\n"
-        return resposta
-    
-    resposta += f"Saldo atual: R$ {saldo_str}\n"
-
-    resposta += "Extrato:\n"
-    for acao in extratos[::-1]:
-        resposta += acao
-
-    return resposta
+import textwrap
 
 
 def menu():
-    menu = """
+    menu = """\n
+    ================ MENU ================
+    [d]\tDepositar
+    [s]\tSacar
+    [e]\tExtrato
+    [nc]\tNova conta
+    [lc]\tListar contas
+    [nu]\tNovo usuário
+    [q]\tSair
+    => """
+    return input(textwrap.dedent(menu))
 
-    --- Sistema Bancário ---
 
-    Operações disponíveis:
-    - 1: operação de depósito
-    - 2: operação de saque
-    - 3: operação de extrato
-    - 4: sair do sistema
-
-    Digite apenas o número da operação desejada: """
-
-    print(menu(), end='')
-
-LIMITE_DIARIO = 3
-LIMITE_SAQUE = float(500)
-
-saldo = float(0)
-contador_saque = 0
-extratos = []
-
-while(True):
-    
-    menu()
-    opcao = int(input())
-
-    if ( opcao == 1):
-        deposito()
-    elif ( opcao == 2 ):  
-        if contador_saque > 3:
-            print("O limite diária de {LIMITE_DIARIO} saques foi atingido!")
-        else:
-            contador_saque +=1
-            saque()
-    elif ( opcao == 3 ):
-        print(extrato())
-    elif ( opcao == 4 ):
-        break
+def depositar(saldo, valor, extrato, /):
+    if valor > 0:
+        saldo += valor
+        extrato += f"Depósito:\tR$ {valor:.2f}\n"
+        print("\n=== Depósito realizado com sucesso! ===")
     else:
-        print("Opção inválida")
+        print("\n@@@ Operação falhou! O valor informado é inválido. @@@")
 
+    return saldo, extrato
+
+
+def sacar(*, saldo, valor, extrato, limite, numero_saques, limite_saques):
+    excedeu_saldo = valor > saldo
+    excedeu_limite = valor > limite
+    excedeu_saques = numero_saques >= limite_saques
+
+    if excedeu_saldo:
+        print("\n@@@ Operação falhou! Você não tem saldo suficiente. @@@")
+
+    elif excedeu_limite:
+        print("\n@@@ Operação falhou! O valor do saque excede o limite. @@@")
+
+    elif excedeu_saques:
+        print("\n@@@ Operação falhou! Número máximo de saques excedido. @@@")
+
+    elif valor > 0:
+        saldo -= valor
+        extrato += f"Saque:\t\tR$ {valor:.2f}\n"
+        numero_saques += 1
+        print("\n=== Saque realizado com sucesso! ===")
+
+    else:
+        print("\n@@@ Operação falhou! O valor informado é inválido. @@@")
+
+    return saldo, extrato
+
+
+def exibir_extrato(saldo, /, *, extrato):
+    print("\n================ EXTRATO ================")
+    print("Não foram realizadas movimentações." if not extrato else extrato)
+    print(f"\nSaldo:\t\tR$ {saldo:.2f}")
+    print("==========================================")
+
+
+def criar_usuario(usuarios):
+    cpf = input("Informe o CPF (somente número): ")
+    usuario = filtrar_usuario(cpf, usuarios)
+
+    if usuario:
+        print("\n@@@ Já existe usuário com esse CPF! @@@")
+        return
+
+    nome = input("Informe o nome completo: ")
+    data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa): ")
+    endereco = input("Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): ")
+
+    usuarios.append({"nome": nome, "data_nascimento": data_nascimento, "cpf": cpf, "endereco": endereco})
+
+    print("=== Usuário criado com sucesso! ===")
+
+
+def filtrar_usuario(cpf, usuarios):
+    usuarios_filtrados = [usuario for usuario in usuarios if usuario["cpf"] == cpf]
+    return usuarios_filtrados[0] if usuarios_filtrados else None
+
+
+def criar_conta(agencia, numero_conta, usuarios):
+    cpf = input("Informe o CPF do usuário: ")
+    usuario = filtrar_usuario(cpf, usuarios)
+
+    if usuario:
+        print("\n=== Conta criada com sucesso! ===")
+        return {"agencia": agencia, "numero_conta": numero_conta, "usuario": usuario}
+
+    print("\n@@@ Usuário não encontrado, fluxo de criação de conta encerrado! @@@")
+
+
+def listar_contas(contas):
+    for conta in contas:
+        linha = f"""\
+            Agência:\t{conta['agencia']}
+            C/C:\t\t{conta['numero_conta']}
+            Titular:\t{conta['usuario']['nome']}
+        """
+        print("=" * 100)
+        print(textwrap.dedent(linha))
+
+
+def main():
+    LIMITE_SAQUES = 3
+    AGENCIA = "0001"
+
+    saldo = 0
+    limite = 500
+    extrato = ""
+    numero_saques = 0
+    usuarios = []
+    contas = []
+
+    while True:
+        opcao = menu()
+
+        if opcao == "d":
+            valor = float(input("Informe o valor do depósito: "))
+
+            saldo, extrato = depositar(saldo, valor, extrato)
+
+        elif opcao == "s":
+            valor = float(input("Informe o valor do saque: "))
+
+            saldo, extrato = sacar(
+                saldo=saldo,
+                valor=valor,
+                extrato=extrato,
+                limite=limite,
+                numero_saques=numero_saques,
+                limite_saques=LIMITE_SAQUES,
+            )
+
+        elif opcao == "e":
+            exibir_extrato(saldo, extrato=extrato)
+
+        elif opcao == "nu":
+            criar_usuario(usuarios)
+
+        elif opcao == "nc":
+            numero_conta = len(contas) + 1
+            conta = criar_conta(AGENCIA, numero_conta, usuarios)
+
+            if conta:
+                contas.append(conta)
+
+        elif opcao == "lc":
+            listar_contas(contas)
+
+        elif opcao == "q":
+            break
+
+        else:
+            print("Operação inválida, por favor selecione novamente a operação desejada.")
+
+
+main()
